@@ -1,0 +1,339 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/* Design tokens — dark is the default; [data-theme="light"] overrides. */
+/* ------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+
+  --rgb-bg: 10 13 20;        /* #0a0d14 near-black, slight blue tint */
+  --rgb-surface: 14 19 29;   /* one step lighter than bg */
+  --rgb-raised: 21 27 39;    /* code wells, inputs, nested panels */
+  --rgb-ink: 232 236 243;    /* primary text */
+  --rgb-muted: 152 163 182;  /* 7.3:1 on bg */
+  --rgb-faint: 121 133 152;  /* 4.6:1 on bg — micro-labels only */
+  --rgb-accent: 34 211 238;  /* #22d3ee the one accent */
+  --rgb-ok: 52 211 153;      /* healthy */
+  --rgb-warn: 245 158 11;    /* warning */
+  --rgb-danger: 248 113 113; /* incident */
+
+  --color-hairline: rgb(232 236 243 / 0.08);
+  --color-hairline-strong: rgb(232 236 243 / 0.16);
+  --color-accent-contrast: rgb(4 24 31);   /* text on accent buttons */
+  --color-glow: rgb(34 211 238 / 0.07);    /* single hero radial light */
+  --color-gridline: rgb(232 236 243 / 0.05);
+
+  --shadow-card: 0 1px 0 0 rgb(0 0 0 / 0.25);
+  --shadow-hero: 0 24px 80px -24px rgb(2 6 14 / 0.6);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --rgb-bg: 247 249 252;     /* #f7f9fc slight blue tint */
+  --rgb-surface: 255 255 255;
+  --rgb-raised: 240 244 250;
+  --rgb-ink: 15 21 31;       /* #0f151f */
+  --rgb-muted: 71 85 105;    /* slate-600, 7.0:1 on bg */
+  --rgb-faint: 100 116 139;  /* slate-500, 4.9:1 on bg */
+  --rgb-accent: 8 116 141;   /* cyan-700, 5.1:1 as text, 4.8:1 under white */
+  --rgb-ok: 5 122 85;        /* emerald-700 */
+  --rgb-warn: 180 83 9;      /* amber-700 */
+  --rgb-danger: 220 38 38;   /* red-700 */
+
+  --color-hairline: rgb(15 21 31 / 0.1);
+  --color-hairline-strong: rgb(15 21 31 / 0.2);
+  --color-accent-contrast: rgb(255 255 255);
+  --color-glow: rgb(8 116 141 / 0.05);
+  --color-gridline: rgb(15 21 31 / 0.06);
+
+  --shadow-card: 0 1px 2px 0 rgb(15 21 31 / 0.05);
+  --shadow-hero: 0 24px 80px -32px rgb(15 21 31 / 0.2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    interpolate-size: allow-keywords; /* animates <details> height in supporting browsers */
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-base font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(var(--rgb-accent) / 0.28);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--rgb-accent) / 0.85);
+    outline-offset: 2px;
+  }
+
+  details > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* Accessible <details> height animation: content stays in a 0fr→1fr
+     grid row; browsers that hide closed content simply skip the effect. */
+  details .acc-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 260ms cubic-bezier(0.2, 0, 0.2, 1);
+  }
+  details[open] .acc-panel {
+    grid-template-rows: 1fr;
+  }
+  .acc-panel > div {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* Same trick for JS-controlled expanders (no <details> involved). */
+  .exp-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 240ms cubic-bezier(0.2, 0, 0.2, 1);
+  }
+  .exp-panel[data-open="true"] {
+    grid-template-rows: 1fr;
+  }
+  .exp-panel > div {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* Kill every animation for people who asked us to. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Components                                                          */
+/* ------------------------------------------------------------------ */
+@layer components {
+  /* Page shell: 1200px max, 24px side padding */
+  .shell {
+    @apply mx-auto w-full max-w-content px-6 md:px-10;
+  }
+
+  /* Mono uppercase micro-labels, e.g. "01 / FEATURES" */
+  .micro-label {
+    @apply font-mono text-[11px] uppercase tracking-[0.18em] text-faint;
+  }
+
+  /* Nav link with 1px underline that slides in from the left */
+  .nav-link {
+    @apply relative;
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.25rem;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms ease;
+  }
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* Hero background: faint 1px grid, fading out radially */
+  .pf-grid-bg {
+    background-image:
+      linear-gradient(to right, var(--color-gridline) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-gridline) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(90% 70% at 50% 0%, black 35%, transparent 78%);
+    mask-image: radial-gradient(90% 70% at 50% 0%, black 35%, transparent 78%);
+  }
+
+  /* The one allowed radial light, behind the hero product shot */
+  .pf-glow {
+    background: radial-gradient(58% 52% at 50% 42%, var(--color-glow), transparent 70%);
+  }
+
+  /* Film grain, 2.5% opacity */
+  .pf-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* Cursor spotlight inside feature cards (hover devices only) */
+  .spotlight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 300ms ease;
+    background: radial-gradient(
+      300px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      rgb(var(--rgb-accent) / 0.07),
+      transparent 65%
+    );
+  }
+  @media (hover: hover) {
+    .spotlight-host:hover .spotlight {
+      opacity: 1;
+    }
+  }
+
+  /* Status dot with a slow sonar ping */
+  .pf-ping {
+    position: relative;
+    display: inline-flex;
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 9999px;
+    background: var(--pf-ping-color, rgb(var(--rgb-ok)));
+  }
+  .pf-ping::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--pf-ping-color, rgb(var(--rgb-ok)));
+    opacity: 0.7;
+    animation: pf-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+    animation-delay: var(--pf-ping-delay, 0ms);
+  }
+
+  /* Logo marquee: duplicated track, pause on hover, edge fade */
+  .marquee {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 42s linear infinite;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  .logo-item {
+    opacity: 0.55;
+    transition: opacity 200ms ease;
+  }
+  .logo-item:hover {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+  }
+
+  /* Plus/minus icon for <details> */
+  .pm {
+    position: relative;
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--rgb-muted);
+    color: rgb(var(--rgb-muted));
+  }
+  .pm::before,
+  .pm::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: translateY(-50%);
+    transition: transform 200ms ease, opacity 200ms ease;
+  }
+  .pm::after {
+    transform: translateY(-50%) rotate(90deg);
+  }
+  details[open] .pm::after {
+    transform: translateY(-50%) scaleX(0) rotate(0deg);
+    opacity: 0;
+  }
+
+  /* Theme toggle: sun visible in dark (switch to light), moon in light */
+  .theme-toggle .icon-sun {
+    display: block;
+  }
+  .theme-toggle .icon-moon {
+    display: none;
+  }
+  [data-theme="light"] .theme-toggle .icon-sun {
+    display: none;
+  }
+  [data-theme="light"] .theme-toggle .icon-moon {
+    display: block;
+  }
+}
+
+@keyframes pf-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Newsletter submit spinner (pure CSS, no JS state beyond on/off) */
+.pf-spinner {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 1.5px solid rgb(var(--rgb-accent-contrast) / 0.35);
+  border-top-color: rgb(var(--rgb-accent-contrast) / 0.9);
+  animation: pf-spin 0.7s linear infinite;
+}
